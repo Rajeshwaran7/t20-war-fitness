@@ -163,6 +163,10 @@ export class PublicCheckInComponent implements OnInit {
   formatDateTime(dateStr: string): string {
     return new Date(dateStr).toLocaleString();
   }
+  
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString();
+  }
 
   calculateDuration(checkinStr: string, checkoutStr: string): string {
     const checkin = new Date(checkinStr);

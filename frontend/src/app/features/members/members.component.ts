@@ -30,11 +30,14 @@ export class MembersComponent implements OnInit {
   baseUrl = '/api';
   displayedColumns = ['memberId','name','plan','status','endDate','feesPaid','planFees','dueAmount','actions'];
   page = 1;
+  pageSize = 10;
   total = 0;
   data: Member[] = [];
   loading = false;
   plans: MembershipPlan[] = [];
   showAdd = false;
+  searchQuery = '';
+  selectedStatus = '';
 
   form = this.fb.group({
     name: ['', Validators.required],
@@ -54,15 +57,57 @@ export class MembersComponent implements OnInit {
     this.http.get<MembershipPlan[]>(`${this.baseUrl}/plans`).subscribe(plans => this.plans = plans);
   }
 
-  loadMembers(page = 1, limit = 10, q?: string, status?: string) {
+  loadMembers(page = 1, limit = this.pageSize, q?: string, status?: string) {
     this.loading = true;
-    const params: any = { page, limit };
-    if (q) { params.name = q; params.email = q; params.phone = q; params.id = q; }
-    if (status) params.status = status;
+    
+    // Store search parameters
+    if (q !== undefined) this.searchQuery = q;
+    if (status !== undefined) this.selectedStatus = status;
+    
+    const params: any = { 
+      page, 
+      limit 
+    };
+    
+    if (this.searchQuery) { 
+      params.name = this.searchQuery; 
+      params.email = this.searchQuery; 
+      params.phone = this.searchQuery; 
+      params.id = this.searchQuery;
+      params.memberId = this.searchQuery;
+    }
+    
+    if (this.selectedStatus) {
+      params.status = this.selectedStatus;
+    }
+    
     this.http.get<any>(`${this.baseUrl}/members`, { params }).subscribe({
-      next: (res) => { this.data = res.data || res; this.total = res.total || this.data.length; this.page = res.page || page; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (res) => { 
+        this.data = res.data || res; 
+        this.total = res.total || this.data.length; 
+        this.page = res.page || page;
+        this.pageSize = limit; 
+        this.loading = false; 
+      },
+      error: () => { 
+        this.loading = false; 
+      }
     });
+  }
+  
+  onPageChange(event: any) {
+    const page = event.pageIndex + 1;
+    const limit = event.pageSize;
+    this.loadMembers(page, limit);
+  }
+  
+  clearSearch() {
+    this.searchQuery = '';
+    this.loadMembers(1);
+  }
+  
+  applyFilters() {
+    this.loadMembers(1, this.pageSize, this.searchQuery, this.selectedStatus);
   }
 
   toggleAdd() { this.showAdd = !this.showAdd; }

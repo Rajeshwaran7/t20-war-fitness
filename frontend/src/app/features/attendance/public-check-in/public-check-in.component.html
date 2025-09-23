@@ -85,17 +85,55 @@
         <!-- Recent Activity -->
         <div *ngIf="memberFound && recentActivity.length > 0" class="recent-activity">
           <h4>Recent Activity</h4>
-          <div class="activity-list">
+          
+          <!-- Table View -->
+          <div class="table-responsive">
+            <table class="table table-striped table-hover activity-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let activity of recentActivity" [ngClass]="{'active-checkin': !activity.checkoutAt}">
+                  <td>
+                    <span class="activity-badge" [ngClass]="activity.checkoutAt ? 'badge-checkout' : 'badge-checkin'">
+                      {{ activity.checkoutAt ? 'Completed' : 'Active' }}
+                    </span>
+                  </td>
+                  <td>{{ formatDate(activity.checkinAt) }}</td>
+                  <td>{{ formatTime(activity.checkinAt) }}</td>
+                  <td>{{ activity.checkoutAt ? formatTime(activity.checkoutAt) : '-' }}</td>
+                  <td>
+                    <span *ngIf="activity.checkoutAt">{{ calculateDuration(activity.checkinAt, activity.checkoutAt) }}</span>
+                    <span *ngIf="!activity.checkoutAt" class="ongoing-badge">Ongoing</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Mobile View (displays on small screens) -->
+          <div class="activity-list d-md-none">
             <div *ngFor="let activity of recentActivity" class="activity-item">
               <div class="activity-icon" [ngClass]="activity.checkoutAt ? 'check-out' : 'check-in'">
                 {{ activity.checkoutAt ? '🚪' : '🚶' }}
               </div>
               <div class="activity-details">
-                <div class="activity-action">{{ activity.checkoutAt ? 'Checked Out' : 'Checked In' }}</div>
+                <div class="activity-action">
+                  <span class="activity-badge-sm" [ngClass]="activity.checkoutAt ? 'badge-checkout' : 'badge-checkin'">
+                    {{ activity.checkoutAt ? 'Completed' : 'Active' }}
+                  </span>
+                </div>
                 <div class="activity-time">{{ formatDateTime(activity.checkinAt) }}</div>
                 <div *ngIf="activity.checkoutAt" class="activity-duration">
                   {{ calculateDuration(activity.checkinAt, activity.checkoutAt) }}
                 </div>
+                <div *ngIf="!activity.checkoutAt" class="ongoing-badge-sm">Ongoing</div>
               </div>
             </div>
           </div>

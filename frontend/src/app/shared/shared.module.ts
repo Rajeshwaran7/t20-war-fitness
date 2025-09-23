@@ -5,17 +5,20 @@ import { LoaderComponent } from './components/loader/loader.component';
 import { LoaderService } from './services/loader.service';
 import { LoaderInterceptor } from './interceptors/loader.interceptor';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FooterComponent } from './components/footer.component';
 
 @NgModule({
   declarations: [
-    LoaderComponent
+    LoaderComponent,
+    FooterComponent
   ],
   imports: [
     CommonModule,
     MatProgressSpinnerModule
   ],
   exports: [
-    LoaderComponent
+    LoaderComponent,
+    FooterComponent
   ],
   providers: [
     LoaderService,

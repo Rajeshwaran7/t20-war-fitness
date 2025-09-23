@@ -4,18 +4,25 @@
     <div>
       <mat-form-field appearance="outline" class="me-2">
         <mat-label>Search</mat-label>
-        <input matInput placeholder="Name, Phone, Email, Member ID" #q (keyup.enter)="loadMembers(1,10,q.value)" />
+        <input matInput placeholder="Name, Phone, Email, Member ID" [(ngModel)]="searchQuery" />
+        <button *ngIf="searchQuery" matSuffix mat-icon-button aria-label="Clear" (click)="clearSearch()">
+        </button>
       </mat-form-field>
       <mat-form-field appearance="outline" class="me-2">
         <mat-label>Status</mat-label>
-        <mat-select #statusSel (selectionChange)="loadMembers(1,10,q.value,statusSel.value)">
+        <mat-select [(ngModel)]="selectedStatus">
           <mat-option [value]="''">All</mat-option>
           <mat-option value="active">Active</mat-option>
           <mat-option value="expired">Expired</mat-option>
           <mat-option value="soon_to_expire">Soon to expire</mat-option>
         </mat-select>
       </mat-form-field>
-      <button mat-raised-button color="primary" (click)="openAddDialog()">Add Member</button>
+      <button mat-raised-button color="primary" class="me-2" (click)="applyFilters()">
+         Search
+      </button>
+      <button mat-raised-button color="primary" (click)="openAddDialog()">
+         Add Member
+      </button>
     </div>
   </div>
 
@@ -84,10 +91,14 @@
   <ng-template #noData>
     <div class="alert alert-info mt-3">No data found</div>
   </ng-template>
-  <div class="d-flex justify-content-end mt-2">
-    <span class="me-3">Page {{page}} • {{total}} total</span>
-    <button mat-stroked-button (click)="loadMembers(1)">First</button>
-    <button mat-stroked-button class="ms-2" (click)="loadMembers(page-1>0?page-1:1)">Prev</button>
-    <button mat-stroked-button class="ms-2" (click)="loadMembers(page+1)">Next</button>
-  </div>
+  <!-- Improved Pagination -->
+  <mat-paginator
+    [length]="total"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    [pageIndex]="page - 1"
+    (page)="onPageChange($event)"
+    showFirstLastButtons
+    aria-label="Select page of members">
+  </mat-paginator>
 </div>

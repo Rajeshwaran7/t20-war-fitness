@@ -13,4 +13,8 @@
 <!-- Global Loader -->
 <app-loader [isLoading]="isLoading" [fullScreen]="true" [message]="loaderMessage"></app-loader>
 
-<router-outlet></router-outlet>
+<div class="main-content">
+  <router-outlet></router-outlet>
+</div>
+
+<app-footer></app-footer>

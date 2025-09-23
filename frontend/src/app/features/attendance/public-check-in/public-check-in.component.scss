@@ -244,6 +244,50 @@
       }
     }
     
+    // Table styles
+    .activity-table {
+      margin-bottom: 20px;
+      
+      th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+      
+      .active-checkin {
+        background-color: #e8f4ff;
+      }
+      
+      .activity-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-block;
+        
+        &.badge-checkin {
+          background-color: #cce5ff;
+          color: #0d6efd;
+        }
+        
+        &.badge-checkout {
+          background-color: #d4edda;
+          color: #198754;
+        }
+      }
+      
+      .ongoing-badge {
+        background-color: #fff3cd;
+        color: #ffc107;
+        font-weight: 500;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+      }
+    }
+    
+    // Mobile view styles
     .activity-list {
       .activity-item {
         display: flex;
@@ -284,10 +328,22 @@
         .activity-details {
           flex: 1;
           
-          .activity-action {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 4px;
+          .activity-badge-sm {
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            
+            &.badge-checkin {
+              background-color: #cce5ff;
+              color: #0d6efd;
+            }
+            
+            &.badge-checkout {
+              background-color: #d4edda;
+              color: #198754;
+            }
           }
           
           .activity-time {
@@ -301,6 +357,16 @@
             color: #28a745;
             font-weight: 500;
             background: #d4edda;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+          }
+          
+          .ongoing-badge-sm {
+            font-size: 0.85rem;
+            background-color: #fff3cd;
+            color: #ffc107;
+            font-weight: 500;
             padding: 2px 8px;
             border-radius: 12px;
             display: inline-block;
