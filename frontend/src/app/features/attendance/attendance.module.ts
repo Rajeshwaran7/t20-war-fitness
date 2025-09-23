@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { SharedModule } from '../../shared/shared.module';
 
 // Material Imports
 import { MatCardModule } from '@angular/material/card';
@@ -23,21 +24,28 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 // Components
 import { PublicCheckInComponent } from './public-check-in/public-check-in.component';
+import { AttendanceHistoryComponent } from './attendance-history/attendance-history.component';
+import { TestAuthComponent } from './test-auth.component';
 import { AttendanceService } from './attendance.service';
 
 const routes: Routes = [
-  { path: '', component: PublicCheckInComponent }
+  { path: '', component: PublicCheckInComponent },
+  { path: 'history', component: AttendanceHistoryComponent },
+  { path: 'test-auth', component: TestAuthComponent }
 ];
 
 @NgModule({
   declarations: [
-    PublicCheckInComponent
+    PublicCheckInComponent,
+    AttendanceHistoryComponent,
+    TestAuthComponent
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
+    SharedModule,
     RouterModule.forChild(routes),
     MatCardModule,
     MatInputModule,

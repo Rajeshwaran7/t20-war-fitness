@@ -5,11 +5,12 @@ import { Member } from '../members/member.entity';
 import { CheckinsService } from './checkins.service';
 import { CheckinsController } from './checkins.controller';
 import { PublicCheckinsController } from './public-checkins.controller';
-import { AttendanceDashboardController } from './attendance-dashboard.controller';
+import { AttendanceHistoryController } from './attendance-history.controller';
+import { PublicHistoryController } from './public-history.controller';
 
 @Module({
     imports: [TypeOrmModule.forFeature([Checkin, Member])],
-    controllers: [CheckinsController, PublicCheckinsController, AttendanceDashboardController],
+    controllers: [CheckinsController, PublicCheckinsController, AttendanceHistoryController, PublicHistoryController],
     providers: [CheckinsService],
     exports: [CheckinsService],
 })

@@ -22,8 +22,17 @@ export class AuthService {
   }
 
   storeToken(token: string) { localStorage.setItem(this.tokenKey, token); }
-  getToken(): string | null { return localStorage.getItem(this.tokenKey); }
-  isAuthenticated(): boolean { return !!this.getToken(); }
+  getToken(): string | null { 
+    const token = localStorage.getItem(this.tokenKey);
+    console.log('Auth Service getToken called, token exists:', !!token);
+    return token;
+  }
+  
+  isAuthenticated(): boolean { 
+    const isAuth = !!this.getToken();
+    console.log('Auth Service isAuthenticated called:', isAuth);
+    return isAuth;
+  }
 
   getRole(): JwtPayload['role'] | null {
     const token = this.getToken();

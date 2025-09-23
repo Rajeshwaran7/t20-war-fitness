@@ -2,10 +2,15 @@
   <a mat-button routerLink="/">T20 war fitness</a>
   <span class="spacer"></span>
   <a mat-button routerLink="/attendance">Check-In/Out</a>
+  <a mat-button routerLink="/attendance/history" *ngIf="auth.getRole() === 'admin' || auth.getRole() === 'gym_manager'">Attendance History</a>
   <a mat-button routerLink="/members" *ngIf="auth.getRole() === 'admin' || auth.getRole() === 'gym_manager'">Members</a>
   <a mat-button routerLink="/plans" *ngIf="auth.getRole() === 'admin'">Plans</a>
   <a mat-button routerLink="/users" *ngIf="auth.getRole() === 'admin'">Users</a>
   <button mat-button color="warn" *ngIf="auth.isAuthenticated()" (click)="logout()">Sign out</button>
   <a mat-button routerLink="/auth" *ngIf="!auth.isAuthenticated()">Login</a>
 </mat-toolbar>
+
+<!-- Global Loader -->
+<app-loader [isLoading]="isLoading" [fullScreen]="true" [message]="loaderMessage"></app-loader>
+
 <router-outlet></router-outlet>

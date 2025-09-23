@@ -119,6 +119,75 @@ export class CheckinsService {
             }
         };
     }
+
+    async getAttendanceHistoryForAllMembers(filters: { 
+        startDate?: string; 
+        endDate?: string; 
+        memberId?: string;
+        page: number;
+        limit: number;
+    }) {
+        // Build the base query
+        let query = this.checkinsRepo
+            .createQueryBuilder('checkin')
+            .leftJoinAndSelect('checkin.member', 'member')
+            .orderBy('checkin.checkinAt', 'DESC');
+
+        // Apply date filters
+        if (filters.startDate && filters.endDate) {
+            query = query.andWhere('DATE(checkin.checkinAt) BETWEEN :startDate AND :endDate', {
+                startDate: filters.startDate,
+                endDate: filters.endDate
+            });
+        }
+
+        // Apply member ID filter if provided
+        if (filters.memberId) {
+            query = query.andWhere('member.memberId = :memberId', { memberId: filters.memberId });
+        }
+
+        // Get total count for pagination
+        const total = await query.getCount();
+
+        // Apply pagination
+        query = query
+            .skip((filters.page - 1) * filters.limit)
+            .take(filters.limit);
+
+        // Execute the query
+        const attendanceRecords = await query.getMany();
+        
+        // Process the records to include calculated fields
+        const data = attendanceRecords.map(record => {
+            let duration = null;
+            let hours = null;
+            
+            if (record.checkoutAt) {
+                const checkInTime = new Date(record.checkinAt).getTime();
+                const checkOutTime = new Date(record.checkoutAt).getTime();
+                duration = Math.round((checkOutTime - checkInTime) / (1000 * 60)); // in minutes
+                hours = Math.round((duration / 60) * 100) / 100; // in hours with 2 decimal places
+            }
+
+            return {
+                id: record.id,
+                memberId: record.member.memberId,
+                memberName: record.member.name,
+                checkinAt: record.checkinAt,
+                checkoutAt: record.checkoutAt,
+                duration: duration,
+                hours: hours,
+                date: record.checkinAt.toISOString().split('T')[0]
+            };
+        });
+
+        return {
+            data,
+            total,
+            page: filters.page,
+            limit: filters.limit
+        };
+    }
 }
 
 

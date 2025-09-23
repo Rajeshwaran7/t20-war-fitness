@@ -14,6 +14,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { DebugInterceptor } from './core/interceptors/debug.interceptor';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -25,6 +27,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
+    SharedModule,
     MatGridListModule,
     MatCardModule,
     MatMenuModule,
@@ -34,7 +37,18 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     MatSnackBarModule
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    // Debug interceptor runs first to log request details
+    { 
+      provide: HTTP_INTERCEPTORS, 
+      useClass: DebugInterceptor, 
+      multi: true
+    },
+    // Auth interceptor runs second to add the token
+    { 
+      provide: HTTP_INTERCEPTORS, 
+      useClass: AuthInterceptor, 
+      multi: true
+    }
   ],
   bootstrap: [AppComponent]
 })

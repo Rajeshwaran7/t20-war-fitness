@@ -1,0 +1,21 @@
+<div *ngIf="isLoading" 
+     [class.loader-container]="true"
+     [class.fullscreen]="fullScreen"
+     [class.overlay]="overlay && !fullScreen"
+     [class.transparent]="transparent">
+  
+  <div class="loader-content">
+    <!-- Modern Spinner -->
+    <div class="spinner" [ngClass]="size">
+      <div class="spinner-inner">
+        <div class="spinner-circle"></div>
+        <div class="spinner-circle-outer"></div>
+      </div>
+    </div>
+    
+    <!-- Optional Loading Message -->
+    <div *ngIf="message" class="loader-message">
+      {{ message }}
+    </div>
+  </div>
+</div>
