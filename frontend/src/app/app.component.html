@@ -1,7 +1,7 @@
 <mat-toolbar color="primary" class="mb-3">
-  <a mat-button routerLink="/dashboard">T20 war fitness</a>
+  <a mat-button routerLink="/">T20 war fitness</a>
   <span class="spacer"></span>
-  <a mat-button routerLink="/dashboard">Dashboard</a>
+  <a mat-button routerLink="/attendance">Check-In/Out</a>
   <a mat-button routerLink="/members" *ngIf="auth.getRole() === 'admin' || auth.getRole() === 'gym_manager'">Members</a>
   <a mat-button routerLink="/plans" *ngIf="auth.getRole() === 'admin'">Plans</a>
   <a mat-button routerLink="/users" *ngIf="auth.getRole() === 'admin'">Users</a>

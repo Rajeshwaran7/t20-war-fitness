@@ -1,0 +1,107 @@
+<div class="attendance-container">
+  <div class="header-section">
+    <h1 class="gym-title">T20 War Fitness</h1>
+    <h2 class="subtitle">Member Check-In/Check-Out</h2>
+  </div>
+
+  <div class="main-content">
+    <mat-card class="attendance-card">
+      <mat-card-content>
+        <!-- Member Search Section -->
+        <div class="search-section">
+          <form [formGroup]="form" (ngSubmit)="verifyMember()">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Enter your Member ID, Phone, or Email</mat-label>
+              <input matInput 
+                     formControlName="identifier" 
+                     placeholder="e.g. 1001, 9876543210, john@example.com"
+                     (keyup.enter)="verifyMember()">
+              <mat-error *ngIf="form.get('identifier')?.hasError('required')">
+                Please enter your identifier
+              </mat-error>
+            </mat-form-field>
+            
+            <button mat-raised-button 
+                    color="primary" 
+                    type="submit" 
+                    class="search-btn"
+                    [disabled]="form.invalid || loading">
+              <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+              <span class="btn-text">{{ loading ? 'Searching...' : 'Find Member' }}</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Member Info & Actions Section -->
+        <div *ngIf="memberFound" class="member-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Member Found</h4>
+            <button mat-button (click)="resetForm()" class="close-btn">
+              <span class="close-icon">✕</span>
+            </button>
+          </div>
+          
+          <div class="member-card">
+            <div class="member-avatar">
+              {{ memberName.charAt(0).toUpperCase() }}
+            </div>
+            <div class="member-details">
+              <h3 class="member-name">{{ memberName }}</h3>
+              <div class="member-status" [ngClass]="'status-' + memberStatus">
+                <span>{{ memberStatus | titlecase }}</span>
+              </div>
+              <div class="member-id">Member ID: {{ memberDisplayId }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button mat-raised-button 
+                    color="accent" 
+                    class="action-btn check-in-btn"
+                    (click)="checkIn()" 
+                    [disabled]="loading || isCheckedIn">
+              <span>Check In</span>
+            </button>
+            
+            <button mat-raised-button 
+                    color="warn" 
+                    class="action-btn check-out-btn"
+                    (click)="checkOut()" 
+                    [disabled]="loading || !isCheckedIn">
+              <span>Check Out</span>
+            </button>
+          </div>
+
+          <!-- Current Status -->
+          <div class="current-status" *ngIf="currentCheckin">
+            <div class="status-text">
+              <span class="status-label">Checked in at:</span>
+              <span class="status-time">{{ formatTime(currentCheckin.checkinAt) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div *ngIf="memberFound && recentActivity.length > 0" class="recent-activity">
+          <h4>Recent Activity</h4>
+          <div class="activity-list">
+            <div *ngFor="let activity of recentActivity" class="activity-item">
+              <div class="activity-icon" [ngClass]="activity.checkoutAt ? 'check-out' : 'check-in'">
+                {{ activity.checkoutAt ? '🚪' : '🚶' }}
+              </div>
+              <div class="activity-details">
+                <div class="activity-action">{{ activity.checkoutAt ? 'Checked Out' : 'Checked In' }}</div>
+                <div class="activity-time">{{ formatDateTime(activity.checkinAt) }}</div>
+                <div *ngIf="activity.checkoutAt" class="activity-duration">
+                  {{ calculateDuration(activity.checkinAt, activity.checkoutAt) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+      
+    </mat-card>
+  </div>
+</div>

@@ -40,16 +40,27 @@ export class MembersService {
 				const plan = await plansRepo.findOne({ where: { id: dto.membershipPlanId } });
 				if (!plan) throw new NotFoundException('Membership plan not found');
 
+				// Generate unique 4-digit member ID
+				const memberId = await this.generateUniqueMemberId(manager);
+				
+				// Calculate start and end dates based on plan duration
+				const startDate = dto.startDate || new Date().toISOString().split('T')[0];
+				const endDate = this.calculateEndDate(startDate, plan.durationDays);
+				
+				console.log(`Calculated dates for plan ${plan.name} (${plan.durationDays} days):`);
+				console.log(`  Start: ${startDate}, End: ${endDate}`);
+
 				const member = membersRepo.create({
+					memberId,
 					name: dto.name,
 					age: dto.age,
 					phone: dto.phone,
 					email: dto.email,
-					startDate: dto.startDate,
-					endDate: dto.endDate,
+					startDate: startDate,
+					endDate: endDate,
 					feesPaid: dto.feesPaid ?? 0,
-					balanceDays: dto.balanceDays ?? this.calculateBalanceDays(dto.startDate, dto.endDate),
-					status: dto.status ?? this.calculateStatus(dto.endDate),
+					balanceDays: dto.balanceDays ?? this.calculateBalanceDays(startDate, endDate),
+					status: dto.status ?? this.calculateStatus(endDate),
 					membershipPlan: plan,
 				});
 				member.dueAmount = Math.max(0, Number(plan.fees) - Number(member.feesPaid || 0));
@@ -98,26 +109,29 @@ export class MembersService {
 		}
 	}
 
-	async findAll(filter?: { id?: string; name?: string; phone?: string; email?: string; status?: MemberStatus; minAge?: number; maxAge?: number; startFrom?: string; startTo?: string; endFrom?: string; endTo?: string; page?: number; limit?: number }): Promise<{ data: Member[]; total: number; page: number; limit: number }> {
+	async findAll(filter?: { id?: string; memberId?: string; name?: string; phone?: string; email?: string; status?: MemberStatus; minAge?: number; maxAge?: number; startFrom?: string; startTo?: string; endFrom?: string; endTo?: string; page?: number; limit?: number }): Promise<{ data: Member[]; total: number; page: number; limit: number }> {
 		const qb = this.membersRepo.createQueryBuilder('m').leftJoinAndSelect('m.membershipPlan', 'plan');
 
 		// Unified free-text search if front-end sent same query into multiple fields
-		const q = filter?.name ?? filter?.email ?? filter?.phone ?? undefined;
+		const q = filter?.name ?? filter?.email ?? filter?.phone ?? filter?.memberId ?? undefined;
 		const sameQ = !!q &&
 			(filter?.name === q) &&
 			(filter?.email === undefined || filter?.email === q) &&
 			(filter?.phone === undefined || filter?.phone === q) &&
+			(filter?.memberId === undefined || filter?.memberId === q) &&
 			(filter?.id === undefined || filter?.id === q);
 		if (sameQ && q) {
 			qb.andWhere(new Brackets((where) => {
 				where.where('LOWER(m.name) LIKE :q', { q: `%${q.toLowerCase()}%` })
 					.orWhere('LOWER(m.email) LIKE :q', { q: `%${q.toLowerCase()}%` })
-					.orWhere('m.phone LIKE :q', { q: `%${q}%` });
+					.orWhere('m.phone LIKE :q', { q: `%${q}%` })
+					.orWhere('m.memberId = :exactQ', { exactQ: q });
 			}));
 		} else {
 			if (filter?.name) qb.andWhere('LOWER(m.name) LIKE :name', { name: `%${filter.name.toLowerCase()}%` });
 			if (filter?.phone) qb.andWhere('m.phone LIKE :phone', { phone: `%${filter.phone}%` });
 			if (filter?.email) qb.andWhere('LOWER(m.email) LIKE :email', { email: `%${filter.email.toLowerCase()}%` });
+			if (filter?.memberId) qb.andWhere('m.memberId = :memberId', { memberId: filter.memberId });
 			if (filter?.id && isUuidString(filter.id)) qb.andWhere('m.id = :id', { id: filter.id });
 		}
 		if (filter?.status) {
@@ -208,12 +222,25 @@ export class MembersService {
 							await periodsRepo.save(currentPeriod);
 						}
 						
+						// Calculate start and end dates based on plan duration
+						const startDate = dto.startDate || new Date().toISOString().split('T')[0];
+						const endDate = this.calculateEndDate(startDate, newPlan.durationDays);
+						
+						console.log(`Plan Switch: Calculated dates for ${newPlan.name} (${newPlan.durationDays} days):`);
+						console.log(`  Start: ${startDate}, End: ${endDate}`);
+						
+						// Update member dates
+						member.startDate = startDate;
+						member.endDate = endDate;
+						member.status = this.calculateStatus(endDate);
+						member.balanceDays = this.calculateBalanceDays(startDate, endDate);
+						
 						// Create new membership period for plan switch
 						const newPeriod = periodsRepo.create({
 							member,
 							membershipPlan: newPlan,
-							startDate: dto.startDate ?? member.startDate,
-							endDate: dto.endDate ?? member.endDate,
+							startDate: startDate,
+							endDate: endDate,
 							planFees: Number(newPlan.fees),
 							feesPaid: 0, // Fresh start
 							dueAmount: Number(newPlan.fees),
@@ -260,12 +287,25 @@ export class MembersService {
 						await periodsRepo.save(currentPeriod);
 					}
 					
+					// Calculate start and end dates based on plan duration
+					const startDate = dto.startDate || new Date().toISOString().split('T')[0];
+					const endDate = this.calculateEndDate(startDate, member.membershipPlan.durationDays);
+					
+					console.log(`Renewal: Calculated dates for ${member.membershipPlan.name} (${member.membershipPlan.durationDays} days):`);
+					console.log(`  Start: ${startDate}, End: ${endDate}`);
+					
+					// Update member dates
+					member.startDate = startDate;
+					member.endDate = endDate;
+					member.status = this.calculateStatus(endDate);
+					member.balanceDays = this.calculateBalanceDays(startDate, endDate);
+					
 					// Create new membership period for renewal
 					const newPeriod = periodsRepo.create({
 						member,
 						membershipPlan: member.membershipPlan,
-						startDate: dto.startDate ?? member.startDate,
-						endDate: dto.endDate ?? member.endDate,
+						startDate: startDate,
+						endDate: endDate,
 						planFees: Number(member.membershipPlan.fees),
 						feesPaid: 0, // Fresh start
 						dueAmount: Number(member.membershipPlan.fees),
@@ -321,11 +361,61 @@ export class MembersService {
 		});
 	}
 
+	private async generateUniqueMemberId(manager?: any): Promise<string> {
+		const membersRepo = manager ? manager.getRepository(Member) : this.membersRepo;
+		
+		// Find the highest existing member ID
+		const lastMember = await membersRepo
+			.createQueryBuilder('member')
+			.select('member.memberId')
+			.where('member.memberId IS NOT NULL')
+			.orderBy('CAST(member.memberId AS INTEGER)', 'DESC')
+			.limit(1)
+			.getOne();
+
+		let nextId = 1001; // Start from 1001
+		if (lastMember && lastMember.memberId) {
+			const lastId = parseInt(lastMember.memberId, 10);
+			if (!isNaN(lastId)) {
+				nextId = lastId + 1;
+			}
+		}
+
+		// Ensure we don't exceed 4 digits
+		if (nextId > 9999) {
+			throw new Error('Cannot generate more member IDs. Maximum limit (9999) reached.');
+		}
+
+		// Check if this ID already exists (safety check)
+		let memberId = nextId.toString();
+		let existingMember = await membersRepo.findOne({ where: { memberId } });
+		
+		// If it exists, find the next available ID
+		while (existingMember && nextId <= 9999) {
+			nextId++;
+			memberId = nextId.toString();
+			existingMember = await membersRepo.findOne({ where: { memberId } });
+		}
+
+		if (nextId > 9999) {
+			throw new Error('Cannot generate more member IDs. Maximum limit (9999) reached.');
+		}
+
+		return memberId;
+	}
+
 	private calculateBalanceDays(startDate: string, endDate: string): number {
 		const start = new Date(startDate);
 		const end = new Date(endDate);
 		const diffMs = end.getTime() - start.getTime();
 		return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+	}
+
+	private calculateEndDate(startDate: string, durationDays: number): string {
+		const start = new Date(startDate);
+		const end = new Date(start);
+		end.setDate(start.getDate() + durationDays);
+		return end.toISOString().split('T')[0]; // Format as YYYY-MM-DD
 	}
 
 	private calculateStatus(endDate: string): MemberStatus {

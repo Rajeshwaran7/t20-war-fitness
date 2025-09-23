@@ -12,7 +12,6 @@ import { PaymentsModule } from './payments/payments.module';
 import { MembershipPlansModule } from './membership-plans/membership-plans.module';
 import { MembersModule } from './members/members.module';
 import { SeedModule } from './seeds/seed.module';
-import { DashboardModule } from './dashboard/dashboard.module';
 import { TasksModule } from './tasks/tasks.module';
 
 @Module({
@@ -29,7 +28,6 @@ import { TasksModule } from './tasks/tasks.module';
 		CheckinsModule,
 		PaymentsModule,
         SeedModule,
-        DashboardModule,
         TasksModule,
 	],
   controllers: [AppController],

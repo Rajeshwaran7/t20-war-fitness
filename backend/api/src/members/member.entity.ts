@@ -15,6 +15,9 @@ export class Member {
 	@PrimaryGeneratedColumn('uuid')
 	id: string;
 
+	@Column({ type: 'varchar', length: 4, unique: true, name: 'member_id' })
+	memberId: string;
+
 	@Column()
 	name: string;
 

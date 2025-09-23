@@ -23,6 +23,7 @@ export class MembersController {
 	@Roles(UserRole.ADMIN, UserRole.GYM_MANAGER)
 	findAll(
 		@Query('id') id?: string,
+		@Query('memberId') memberId?: string,
 		@Query('name') name?: string,
 		@Query('phone') phone?: string,
 		@Query('email') email?: string,
@@ -38,6 +39,7 @@ export class MembersController {
 	) {
 		return this.membersService.findAll({
 			id,
+			memberId,
 			name,
 			phone,
 			email,

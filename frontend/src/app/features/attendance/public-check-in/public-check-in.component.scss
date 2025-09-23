@@ -1,0 +1,377 @@
+.attendance-container {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: 30px;
+  
+  .gym-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
+  
+  .subtitle {
+    font-size: 1.5rem;
+    color: #6c757d;
+    font-weight: 400;
+  }
+}
+
+.main-content {
+  width: 100%;
+  max-width: 600px;
+}
+
+.attendance-card {
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.search-section {
+  padding: 30px;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  
+  .search-field {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .search-btn {
+    width: 100%;
+    height: 50px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    background: #007bff;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background: #0056b3;
+    }
+    
+    .btn-text {
+      margin-left: 8px;
+    }
+  }
+}
+
+.member-section {
+  padding: 30px;
+  
+  .close-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    
+    .close-icon {
+      font-size: 1.2rem;
+      color: #6c757d;
+    }
+    
+    &:hover {
+      background: #e9ecef;
+      
+      .close-icon {
+        color: #495057;
+      }
+    }
+  }
+  
+  .member-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    
+    .member-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #007bff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    
+    .member-details {
+      flex: 1;
+      
+      .member-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+      }
+      
+      .member-status {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        
+        mat-icon {
+          margin-right: 5px;
+          font-size: 18px;
+        }
+        
+        &.status-active {
+          color: #28a745;
+        }
+        
+        &.status-expired {
+          color: #dc3545;
+        }
+        
+        &.status-soon_to_expire {
+          color: #ffc107;
+        }
+      }
+      
+      .member-id {
+        font-size: 0.9rem;
+        color: #666;
+      }
+    }
+  }
+  
+  .action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+    
+    .action-btn {
+      height: 60px;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      mat-icon {
+        margin-right: 8px;
+        font-size: 24px;
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+    
+    .check-in-btn {
+      background: #28a745;
+      color: white;
+      
+      &:not(:disabled):hover {
+        background: #218838;
+      }
+    }
+    
+    .check-out-btn {
+      background: #dc3545;
+      color: white;
+      
+      &:not(:disabled):hover {
+        background: #c82333;
+      }
+    }
+  }
+  
+  .current-status {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+    
+    .status-icon {
+      color: #1976d2;
+      margin-right: 10px;
+    }
+    
+    .status-text {
+      .status-label {
+        font-weight: 500;
+        color: #333;
+        margin-right: 8px;
+      }
+      
+      .status-time {
+        font-weight: 600;
+        color: #1976d2;
+      }
+    }
+  }
+  
+  .recent-activity {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    
+    h4 {
+      margin-bottom: 15px;
+      color: #2c3e50;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      
+      &::before {
+        content: "📋";
+        margin-right: 8px;
+      }
+    }
+    
+    .activity-list {
+      .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: #e9ecef;
+          transform: translateX(5px);
+        }
+        
+        .activity-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 15px;
+          font-size: 1.2rem;
+          
+          &.check-in {
+            background: #d4edda;
+            color: #28a745;
+          }
+          
+          &.check-out {
+            background: #f8d7da;
+            color: #dc3545;
+          }
+        }
+        
+        .activity-details {
+          flex: 1;
+          
+          .activity-action {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+          }
+          
+          .activity-time {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+          }
+          
+          .activity-duration {
+            font-size: 0.85rem;
+            color: #28a745;
+            font-weight: 500;
+            background: #d4edda;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+          }
+        }
+      }
+    }
+  }
+}
+
+.card-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  padding: 20px;
+  text-align: center;
+  
+  .admin-link {
+    color: #666;
+    
+    mat-icon {
+      margin-right: 5px;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .attendance-container {
+    padding: 10px;
+  }
+  
+  .header-section {
+    .gym-title {
+      font-size: 2rem;
+    }
+    
+    .subtitle {
+      font-size: 1.2rem;
+    }
+  }
+  
+  .search-section {
+    padding: 20px;
+  }
+  
+  .member-section {
+    padding: 20px;
+    
+    .member-card {
+      flex-direction: column;
+      text-align: center;
+      
+      .member-avatar {
+        margin-right: 0;
+        margin-bottom: 15px;
+      }
+    }
+    
+    .action-buttons {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Global snackbar styles
+.success-snackbar {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background-color: #dc3545 !important;
+  color: white !important;
+}

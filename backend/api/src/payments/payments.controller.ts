@@ -38,8 +38,15 @@ export class PaymentsController {
         @Param('memberId') memberId: string,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
+        @Query('sort') sort?: string, // 'asc' or 'desc'
     ) {
-        return this.paymentsService.listForMember(memberId, page ? parseInt(page, 10) : undefined, limit ? parseInt(limit, 10) : undefined);
+        const sortOrder = sort === 'asc' ? 'ASC' : 'DESC'; // Default to DESC if not specified or invalid
+        return this.paymentsService.listForMember(
+            memberId, 
+            page ? parseInt(page, 10) : undefined, 
+            limit ? parseInt(limit, 10) : undefined,
+            sortOrder
+        );
     }
 }
 

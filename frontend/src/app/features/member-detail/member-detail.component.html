@@ -1,6 +1,14 @@
 <div class="container py-4" *ngIf="member">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="m-0">{{ member.name }}</h2>
+    <div class="d-flex align-items-center">
+      <button mat-icon-button (click)="goBack()" class="me-2">
+        <span style="font-size: 1.5rem;">←</span>
+      </button>
+      <div>
+        <h2 class="m-0">{{ member.name }}</h2>
+        <small class="text-muted">Member ID: {{ member.memberId }}</small>
+      </div>
+    </div>
     <button mat-stroked-button color="primary" (click)="openEdit()">Edit / Renew</button>
   </div>
   <mat-tab-group>
@@ -48,26 +56,188 @@
         </ng-template>
       </div>
     </mat-tab>
-    <mat-tab label="Check-ins">
-      <div class="d-flex justify-content-end mt-2">
-        <button mat-raised-button color="primary" (click)="checkIn()">Check-in</button>
-        <button mat-raised-button color="accent" class="ms-2" (click)="checkOut()">Check-out</button>
+    <mat-tab label="Attendance History">
+      <!-- Filter Section -->
+      <div class="row mt-3 mb-4">
+        <div class="col-12">
+          <mat-card class="filter-card">
+            <mat-card-content>
+              <div class="row align-items-end">
+                <div class="col-md-3">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Filter Type</mat-label>
+                    <mat-select [(value)]="attendanceFilterType" (selectionChange)="onAttendanceFilterChange()">
+                      <mat-option value="month">Month & Year</mat-option>
+                      <mat-option value="range">Date Range</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                
+                <div class="col-md-3" *ngIf="attendanceFilterType === 'month'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Month</mat-label>
+                    <mat-select [(value)]="attendanceFilters.month" (selectionChange)="onAttendanceFilterChange()">
+                      <mat-option value="1">January</mat-option>
+                      <mat-option value="2">February</mat-option>
+                      <mat-option value="3">March</mat-option>
+                      <mat-option value="4">April</mat-option>
+                      <mat-option value="5">May</mat-option>
+                      <mat-option value="6">June</mat-option>
+                      <mat-option value="7">July</mat-option>
+                      <mat-option value="8">August</mat-option>
+                      <mat-option value="9">September</mat-option>
+                      <mat-option value="10">October</mat-option>
+                      <mat-option value="11">November</mat-option>
+                      <mat-option value="12">December</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                
+                <div class="col-md-3" *ngIf="attendanceFilterType === 'month'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Year</mat-label>
+                    <mat-select [(value)]="attendanceFilters.year" (selectionChange)="onAttendanceFilterChange()">
+                      <mat-option value="2024">2024</mat-option>
+                      <mat-option value="2025">2025</mat-option>
+                      <mat-option value="2026">2026</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                
+                <div class="col-md-3" *ngIf="attendanceFilterType === 'range'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Start Date</mat-label>
+                    <input matInput [matDatepicker]="startPicker" [(ngModel)]="attendanceFilters.startDate" (dateChange)="onAttendanceFilterChange()">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                
+                <div class="col-md-3" *ngIf="attendanceFilterType === 'range'">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>End Date</mat-label>
+                    <input matInput [matDatepicker]="endPicker" [(ngModel)]="attendanceFilters.endDate" (dateChange)="onAttendanceFilterChange()">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                
+                <div class="col-md-3 d-flex align-items-end">
+                  <button mat-raised-button color="accent" (click)="exportAttendanceData()" [disabled]="!attendanceRecords || attendanceRecords.length === 0">
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
-      <div class="mt-3">
-        <table mat-table [dataSource]="checkins" class="w-100 mat-elevation-z1" *ngIf="checkins && checkins.length; else noCheckins">
+
+      <!-- Statistics Cards -->
+      <div class="row mb-4" *ngIf="attendanceStatistics">
+        <div class="col-md-3 col-sm-6 mb-3">
+          <mat-card class="stat-card">
+            <mat-card-content class="text-center">
+              <div class="stat-value text-primary">{{ attendanceStatistics.totalSessions }}</div>
+              <div class="stat-label">Total Sessions</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+          <mat-card class="stat-card">
+            <mat-card-content class="text-center">
+              <div class="stat-value text-success">{{ attendanceStatistics.completedSessions }}</div>
+              <div class="stat-label">Completed Sessions</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+          <mat-card class="stat-card">
+            <mat-card-content class="text-center">
+              <div class="stat-value text-info">{{ attendanceStatistics.totalHours }}h</div>
+              <div class="stat-label">Total Hours</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+          <mat-card class="stat-card">
+            <mat-card-content class="text-center">
+              <div class="stat-value text-warning">{{ attendanceStatistics.averageHours }}h</div>
+              <div class="stat-label">Average per Session</div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="d-flex justify-content-end mb-3">
+        <button mat-raised-button color="primary" (click)="checkIn()" class="me-2">
+          Check-in
+        </button>
+        <button mat-raised-button color="accent" (click)="checkOut()">
+          Check-out
+        </button>
+      </div>
+
+      <!-- Attendance Records Table -->
+      <div class="attendance-table">
+        <table mat-table [dataSource]="attendanceRecords" class="w-100 mat-elevation-z2" *ngIf="attendanceRecords && attendanceRecords.length; else noAttendance">
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.date | date:'d MMM y' }}</td>
+          </ng-container>
+          
           <ng-container matColumnDef="checkinAt">
-            <th mat-header-cell *matHeaderCellDef>In</th>
-            <td mat-cell *matCellDef="let c">{{ c.checkinAt | date:'d MMMM y h:mm:ssa' | lowercase }}</td>
+            <th mat-header-cell *matHeaderCellDef>Check-in Time</th>
+            <td mat-cell *matCellDef="let record">{{ formatTime(record.checkinAt) }}</td>
           </ng-container>
+          
           <ng-container matColumnDef="checkoutAt">
-            <th mat-header-cell *matHeaderCellDef>Out</th>
-            <td mat-cell *matCellDef="let c">{{ c.checkoutAt ? ((c.checkoutAt | date:'d MMMM y h:mm:ssa') | lowercase) : '-' }}</td>
+            <th mat-header-cell *matHeaderCellDef>Check-out Time</th>
+            <td mat-cell *matCellDef="let record">
+              <span *ngIf="record.checkoutAt; else notCheckedOut">{{ formatTime(record.checkoutAt) }}</span>
+              <ng-template #notCheckedOut>
+                <span class="badge bg-warning text-dark">Still checked in</span>
+              </ng-template>
+            </td>
           </ng-container>
-          <tr mat-header-row *matHeaderRowDef="['checkinAt','checkoutAt']"></tr>
-          <tr mat-row *matRowDef="let row; columns: ['checkinAt','checkoutAt'];"></tr>
+          
+          <ng-container matColumnDef="duration">
+            <th mat-header-cell *matHeaderCellDef>Duration</th>
+            <td mat-cell *matCellDef="let record">
+              <span *ngIf="record.duration; else noDuration" class="badge bg-success">
+                {{ record.duration }} min
+              </span>
+              <ng-template #noDuration>
+                <span class="text-muted">-</span>
+              </ng-template>
+            </td>
+          </ng-container>
+          
+          <ng-container matColumnDef="hours">
+            <th mat-header-cell *matHeaderCellDef>Hours</th>
+            <td mat-cell *matCellDef="let record">
+              <span *ngIf="record.hours; else noHours" class="badge bg-info">
+                {{ record.hours }}h
+              </span>
+              <ng-template #noHours>
+                <span class="text-muted">-</span>
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['date', 'checkinAt', 'checkoutAt', 'duration', 'hours']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['date', 'checkinAt', 'checkoutAt', 'duration', 'hours'];"></tr>
         </table>
-        <ng-template #noCheckins>
-          <div class="alert alert-info">No data found</div>
+        
+        <ng-template #noAttendance>
+          <mat-card class="text-center py-5">
+            <mat-card-content>
+              <mat-icon class="large-icon text-muted mb-3">event_busy</mat-icon>
+              <h5 class="text-muted">No attendance records found</h5>
+              <p class="text-muted">Try adjusting your filter criteria or check back later.</p>
+            </mat-card-content>
+          </mat-card>
         </ng-template>
       </div>
     </mat-tab>

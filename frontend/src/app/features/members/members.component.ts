@@ -6,6 +6,7 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dial
 interface MembershipPlan { id: string; name: string; fees?: number; }
 interface Member {
   id: string;
+  memberId: string;
   name: string;
   age: number;
   phone?: string;
@@ -27,7 +28,7 @@ interface Member {
 })
 export class MembersComponent implements OnInit {
   baseUrl = '/api';
-  displayedColumns = ['name','plan','status','endDate','feesPaid','planFees','dueAmount','actions'];
+  displayedColumns = ['memberId','name','plan','status','endDate','feesPaid','planFees','dueAmount','actions'];
   page = 1;
   total = 0;
   data: Member[] = [];

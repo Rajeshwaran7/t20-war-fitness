@@ -1,13 +1,15 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, Validators } from '@angular/forms';
+import { Location } from '@angular/common';
 
 interface Plan { id: string; name: string; fees: number }
 interface Member {
   id: string;
+  memberId: string;
   name: string;
   age: number;
   phone?: string;
@@ -22,6 +24,21 @@ interface Member {
 }
 interface Payment { id: string; amount: number; paidOn: string }
 interface Checkin { id: string; checkinAt: string; checkoutAt?: string }
+interface AttendanceRecord {
+  id: string;
+  checkinAt: string;
+  checkoutAt?: string;
+  duration?: number;
+  hours?: number;
+  date: string;
+}
+interface AttendanceStatistics {
+  totalSessions: number;
+  completedSessions: number;
+  incompleteSessions: number;
+  totalHours: number;
+  averageHours: number;
+}
 interface PlanHistoryRow { changedAt: string; fromPlan?: Plan | null; toPlan: Plan }
 interface MembershipPeriod { 
   id: string; 
@@ -47,12 +64,28 @@ export class MemberDetailComponent implements OnInit {
   member?: Member;
   payments: Payment[] = [];
   checkins: Checkin[] = [];
+  attendanceRecords: AttendanceRecord[] = [];
+  attendanceStatistics?: AttendanceStatistics;
+  attendanceFilterType = 'month';
+  attendanceFilters = {
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    startDate: '',
+    endDate: ''
+  };
   membershipRows: Array<{label: string; value: any}> = [];
   plans: Plan[] = [];
   planHistory: PlanHistoryRow[] = [];
   membershipPeriods: MembershipPeriod[] = [];
   
-  constructor(private route: ActivatedRoute, private http: HttpClient, private dialog: MatDialog, private snack: MatSnackBar) {}
+  constructor(
+    private route: ActivatedRoute, 
+    private http: HttpClient, 
+    private dialog: MatDialog, 
+    private snack: MatSnackBar,
+    private router: Router,
+    private location: Location
+  ) {}
 
   ngOnInit(): void {
     this.memberId = this.route.snapshot.paramMap.get('id') as string;
@@ -71,15 +104,109 @@ export class MemberDetailComponent implements OnInit {
         { label: 'Due Amount', value: m.dueAmount ?? '' },
       ];
     });
-    this.http.get<Payment[]>(`${this.baseUrl}/payments/${this.memberId}`).subscribe(p => this.payments = p);
+    // Get payments history in descending order (newest first)
+    this.http.get<Payment[]>(`${this.baseUrl}/payments/${this.memberId}?sort=desc`).subscribe(p => this.payments = p);
     this.http.get<Checkin[]>(`${this.baseUrl}/checkins/${this.memberId}/history`).subscribe(c => this.checkins = c);
     this.http.get<Plan[]>(`${this.baseUrl}/plans`).subscribe(pl => this.plans = pl);
     this.http.get<PlanHistoryRow[]>(`${this.baseUrl}/members/${this.memberId}/plan-history`).subscribe(h => this.planHistory = h);
     this.http.get<MembershipPeriod[]>(`${this.baseUrl}/members/${this.memberId}/membership-periods`).subscribe(periods => this.membershipPeriods = periods);
+    this.loadAttendanceHistory();
   }
 
   checkIn() { this.http.post(`${this.baseUrl}/checkins/${this.memberId}/checkin`, {}).subscribe(() => { this.snack.open('Checked in', 'Close', { duration: 1500 }); this.load(); }); }
   checkOut() { this.http.post(`${this.baseUrl}/checkins/${this.memberId}/checkout`, {}).subscribe(() => { this.snack.open('Checked out', 'Close', { duration: 1500 }); this.load(); }); }
+
+  loadAttendanceHistory() {
+    let params = '';
+    if (this.attendanceFilterType === 'month') {
+      params = `?month=${this.attendanceFilters.month}&year=${this.attendanceFilters.year}`;
+    } else if (this.attendanceFilterType === 'range' && this.attendanceFilters.startDate && this.attendanceFilters.endDate) {
+      params = `?startDate=${this.attendanceFilters.startDate}&endDate=${this.attendanceFilters.endDate}`;
+    }
+    
+    this.http.get<{records: AttendanceRecord[], statistics: AttendanceStatistics}>(`${this.baseUrl}/checkins/${this.memberId}/attendance-history${params}`)
+      .subscribe(response => {
+        this.attendanceRecords = response.records;
+        this.attendanceStatistics = response.statistics;
+      });
+  }
+
+  onAttendanceFilterChange() {
+    this.loadAttendanceHistory();
+  }
+
+  formatDateTime(dateStr: string): string {
+    return new Date(dateStr).toLocaleString();
+  }
+
+  formatTime(dateStr: string): string {
+    return new Date(dateStr).toLocaleTimeString();
+  }
+
+  calculateDuration(checkinStr: string, checkoutStr: string): string {
+    const checkin = new Date(checkinStr);
+    const checkout = new Date(checkoutStr);
+    const diffMs = checkout.getTime() - checkin.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffHours > 0) {
+      return `${diffHours}h ${diffMinutes}m`;
+    } else {
+      return `${diffMinutes}m`;
+    }
+  }
+
+  exportAttendanceData() {
+    if (!this.attendanceRecords || this.attendanceRecords.length === 0) {
+      this.snack.open('No data to export', 'Close', { duration: 3000 });
+      return;
+    }
+    
+    const csvContent = this.generateCSV(this.attendanceRecords);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a download link and trigger it
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    
+    // Generate filename with member name and date range
+    const memberName = this.member?.name?.replace(/\s+/g, '_') || 'member';
+    const now = new Date();
+    const filename = `${memberName}_attendance_${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}.csv`;
+    a.setAttribute('download', filename);
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    this.snack.open('Export successful', 'Close', { duration: 3000 });
+  }
+
+  private generateCSV(data: AttendanceRecord[]): string {
+    const headers = ['Date', 'Check-in Time', 'Check-out Time', 'Duration (mins)', 'Hours'];
+    const csvRows = [headers.join(',')];
+
+    for (const record of data) {
+      const row = [
+        record.date,
+        this.formatTime(record.checkinAt),
+        record.checkoutAt ? this.formatTime(record.checkoutAt) : 'Not checked out',
+        record.duration !== null && record.duration !== undefined ? record.duration.toString() : 'N/A',
+        record.hours !== null && record.hours !== undefined ? record.hours.toString() : 'N/A'
+      ];
+      csvRows.push(row.join(','));
+    }
+
+    return csvRows.join('\n');
+  }
+
+  goBack() {
+    this.location.back();
+  }
   addPayment() {
     const dueAmount = this.member?.dueAmount || 0;
     this.dialog.open(AddPaymentDialog, { data: { memberId: this.memberId, dueAmount }, width: '420px', maxWidth: '95vw' })
